@@ -1,0 +1,53 @@
+import requests
+
+# Define the base URL for SNOMED International's API (check SNOMED documentation for exact endpoint)
+BASE_URL = "https://browser.ihtsdotools.org/snowstorm/snomed-ct"
+VERSION = "MAIN"  # This might differ based on SNOMED release versions
+
+# Include your API Key
+headers = {
+    "Accept": "application/json",
+    "Authorization": "Bearer YOUR_API_KEY"  # Replace with your actual API key
+}
+
+#Retrieving Snowmed Concept Details
+def get_snomed_concept_details(concept_id):
+    url = f"{BASE_URL}/{VERSION}/concepts/{concept_id}"
+    
+    response = requests.get(url, headers=headers)
+    if response.status_code == 200:
+        concept_details = response.json()
+        return concept_details
+    else:
+        print(f"Error: Unable to retrieve details for concept ID {concept_id}. Status Code: {response.status_code}")
+        return None
+
+# Example usage
+concept_id = "29857009"  # Example SNOMED CT concept ID for "Diabetes Mellitus"
+concept_details = get_snomed_concept_details(concept_id)
+print(concept_details)
+
+#Map Snowmed Codes to Clinical Data
+def map_clinical_terms_to_snomed(terms):
+    mappings = {}
+    for term in terms:
+        search_url = f"{BASE_URL}/{VERSION}/concepts"
+        params = {"term": term, "limit": 1}
+        
+        response = requests.get(search_url, headers=headers, params=params)
+        if response.status_code == 200:
+            data = response.json()
+            if data['items']:
+                mappings[term] = data['items'][0]['conceptId']
+            else:
+                mappings[term] = "No matching concept"
+        else:
+            print(f"Error: Unable to search term '{term}'. Status Code: {response.status_code}")
+    
+    return mappings
+
+# Example usage
+clinical_terms = ["Diabetes Mellitus", "Hypertension", "Asthma"]
+mapped_terms = map_clinical_terms_to_snomed(clinical_terms)
+print(mapped_terms)
+
